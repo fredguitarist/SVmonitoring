@@ -1,0 +1,37 @@
+Так как некоторые хосты проекта Счастливый взгляд не имеют "белого" адреса, выбор сделан в пользу 
+использования активного Заббикс агента(для всех хостов).
+
+Установка и настрока агента:
+1.```apt-get install zabbix-agent2```
+2. По пути ```/etc/zabbix/zabbix_agent2.d``` создать файл custom.conf
+с содержимым ```ServerActive=<адрес заббикс сервера>:10051```
+3. Введите ```systemctl reload zabbix-agent2``` 
+
+Настройки Заббикс сервера:
+
+1. для всех машин c nginx используем копию библиотечного шаблона Linux by Zabbix agent active
+под названием Linux by Zabbix agent active custom:
+    - за основу берем библотечный шаблон Nginx by Zabbix agent, деалем его копию и называем  
+    Nginx by Zabbix agent active custom.
+    - заходим в items шаблона, сортируем их по фильтру Zabbix agent. все полученные items редактируем менняя type
+    c Zabbix agent на Zabbix agent(active), тем самым происходит адаптация работы шаблона с активным агентом.
+    - выставить значения макросов:
+        - {$NGINX.STUB_STATUS.PATH} nginx_status/
+        - {$NGINX.STUB_STATUS.HOST} https://<доменное имя>/
+
+    далее на хосте:
+        - настроить location в конфигурации nginx:
+            - в директиве server{} до include /etc/nginx/config/monitoring.conf; вписать ```satisfy any;
+                                                                                            allow 45.9.90.152/32;
+                                                                                            include /etc/nginx/config/monitoring.conf;````
+        - создать /opt/nginx/config/monitoring.conf с содержимым ```location /nginx_status {
+                                                                                            stub_status on;
+                                                                                            allow 89.248.197.131/32;
+                                                                                            allow 45.9.90.152/32;
+                                                                                            deny all;
+                                                                                            }
+        - перезапустить NGINX (в еонтейнере nginx -s reload)
+
+
+
+    
