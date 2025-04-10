@@ -1,9 +1,0 @@
-есть три хоста 
-172.22.0.40, 45.9.90.154  v1-runners01 (ssh -o ProxyCommand="ssh -W %h:%p awg@v1-app01.happyhook.ru -p 3422 -i key_file" awg@172.22.0.40 -p 3422 -i key_file)
-172.22.0.20  v1-db01 (ssh -o ProxyCommand="ssh -W %h:%p awg@v1-app01.happyhook.ru -p 3422 -i key_file" awg@172.22.0.20 -p 3422 -i key_file)
-172.22.0.30  v1-redis01 (ssh -o ProxyCommand="ssh -W %h:%p awg@v1-app01.happyhook.ru -p 3422 -i key_file" awg@172.22.0.30 -p 3422 -i key_file)
-
-второй и трейти ходят в интернет через первый, как настроить заббикс мониторинг для второго и третьего хостов
-
-
-
