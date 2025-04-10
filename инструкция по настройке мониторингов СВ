@@ -9,13 +9,16 @@
 
 Настройки Заббикс сервера:
 
-1. для всех машин c nginx используем копию библиотечного шаблона Linux by Zabbix agent active
+1. для всех хостов используем шаблон Linux by Zabbix agent active
+
+2. для всех машин c nginx используем копию библиотечного шаблона Linux by Zabbix agent active
 под названием Linux by Zabbix agent active custom:
     - за основу берем библотечный шаблон Nginx by Zabbix agent, деалем его копию и называем  
     Nginx by Zabbix agent active custom.
     - заходим в items шаблона, сортируем их по фильтру Zabbix agent. все полученные items редактируем менняя type
     c Zabbix agent на Zabbix agent(active), тем самым происходит адаптация работы шаблона с активным агентом.
-    - выставить значения макросов:
+    - навесить шаблон на хост
+    - выставить значения макросов хоста:
         - {$NGINX.STUB_STATUS.PATH} nginx_status/
         - {$NGINX.STUB_STATUS.HOST} https://<доменное имя>/
 
@@ -25,13 +28,43 @@
                                                                                             allow 45.9.90.152/32;
                                                                                             include /etc/nginx/config/monitoring.conf;````
         - создать /opt/nginx/config/monitoring.conf с содержимым ```location /nginx_status {
-                                                                                            stub_status on;
-                                                                                            allow 89.248.197.131/32;
+                                                                    stub_status on;
+                                                                    allow 89.248.197.131/32;
+                                                                    allow 45.9.90.152/32;
+                                                                    deny all;
+                                                                    }
+        - перезапустить NGINX (в контейнере nginx -s reload)
+
+3. для всех машин c php-fpm используем копию библиотечного шаблона 	PHP-FPM by Zabbix agent
+под названием PHP-FPM by Zabbix agent active custom:
+    - за основу берем библотечный шаблон PHP-FPM by Zabbix agent, деалем его копию и называем  
+    PHP-FPM by Zabbix agent active custom.
+    - заходим в items шаблона, сортируем их по фильтру Zabbix agent. все полученные items редактируем менняя type
+    c Zabbix agent на Zabbix agent(active), тем самым происходит адаптация работы шаблона с активным агентом.
+    - навесить шаблон на хост
+    - выставить значения макросов хоста:
+        - {$PHP_FPM.HOST} https://<доменное имя>/
+        - {$PHP_FPM.PING.PAGE} ping/
+        - {$PHP_FPM.PROCESS_NAME} php-fpm: pool www
+        - {$PHP_FPM.STATUS.PAGE} status/
+
+    далее на хосте:
+        - настроить конфигурацию PHP-FPM:
+            в конфигурационном файле /opt/php/config/php-fpm.conf вписать 
+            ```pm.status_path = /status/
+                ping.path = /ping/```
+
+        - настроить location в конфигурации nginx:
+            - в директиве server{} до include /etc/nginx/config/monitoring.conf; вписать ```satisfy any;
                                                                                             allow 45.9.90.152/32;
-                                                                                            deny all;
-                                                                                            }
-        - перезапустить NGINX (в еонтейнере nginx -s reload)
+                                                                                            include /etc/nginx/config/monitoring.conf;````
+        - создать /opt/nginx/config/monitoring.conf с содержимым ```location location = /status {
+                                                                                                allow all;
+                                                                                                fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+                                                                                                fastcgi_index index.php;
+                                                                                                include fastcgi_params;
+                                                                                                fastcgi_pass php-upstream;}
 
-
+        - перезапустить NGINX и PHP-FPM docker compose restart
 
     
